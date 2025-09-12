@@ -5,14 +5,14 @@ based on given thresholds
 """
 
 
-def get_nitrogen_classification(pH_value):
+def get_nitrogen_classification(nitrogen_value):
     """
     returns the classification of Nitrogen in location
     """
-    pH_value = float(pH_value)
-    if pH_value is None or pH_value <= 1.5:
+    nitrogen_value = float(nitrogen_value)
+    if nitrogen_value is None or nitrogen_value <= 1.5:
         return "LOW"
-    elif pH_value > 1.5 and pH_value <= 5.0:
+    elif nitrogen_value > 1.5 and nitrogen_value <= 5.0:
         return "MODERATE"
     else:
         return "HIGH"
