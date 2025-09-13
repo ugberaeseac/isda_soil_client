@@ -1,3 +1,14 @@
+"""
+This script:
+- reads environment variables for API endpoints and credentials,
+- prompts the user for coordinates and depth,
+- validates basic inputs,
+- logs into the iSDA API to obtain an access token,
+- fetches soil properties,
+- classifies soil property values (N, P, K, pH),
+- get fertilizer recommendation and prints the recommendation to stdout.
+"""
+
 import requests
 import os
 from dotenv import load_dotenv
@@ -12,7 +23,7 @@ from fertilizer_recommendation import get_fertilizer_recommendation
 
 load_dotenv()
 
-
+# load and validate all environmental variables
 base_url = os.environ.get('BASE_URL')
 if not base_url:
     print('RuntimeError: BASE_URL not set. check the .env file')
@@ -53,17 +64,20 @@ def check_coordinates(lattitude, longitude):
 
 def run_client():
     """
-
+    Main function to collect inputs, fetch soil property data, 
+    classify and get fertilizer recommendation from LLM
     """
+    # prompt users for input
     lattitude = input('Enter lattitude of the location in Africa:    ').strip()
     longitude = input('Enter longitude of the location in Africa:    ').strip()
     depth = input('Enter the depth:    ').strip()
 
-
+    # validate if inputs are present
     if not (lattitude or longitude):
         print('\nError: Please enter the lattitude and longitude of the location')
         exit(1)
 
+    # convert inputs to floats for parsing
     try:
         lattitude = float(lattitude)
         longitude = float(longitude)
@@ -71,13 +85,13 @@ def run_client():
         print('\nError: Lattitude and Longitude should be decimal values')
         exit(1)
 
-    
+    # check if the co-ordinate (input) is a location in Africa
     is_within_africa = check_coordinates(lattitude, longitude)
     if not is_within_africa:
         print('\nError: Co-ordinates are outside Africa. Please provide a location in Africa')
         exit(1)
 
-
+    # ensure only a topsoil value of '0-20cm' is entered as the depth
     depth_values = ['0-20']
     if depth not in depth_values:
         print('Error: Depth must be topsoil value (0-20cm)')
@@ -87,6 +101,10 @@ def run_client():
     url = f'{base_url}/login'
     payload = {'username': isda_email, 'password': isda_password}
     
+   
+    # catch ReadTimeout or generic request errors to avoid crashes
+    # check status code for invalid credentials
+    # on success, parse response JSON and extract access token
     try:
         response = requests.post(url, data=payload, timeout=5)
     except requests.exceptions.ReadTimeout:
@@ -103,6 +121,7 @@ def run_client():
         access_token = response_data.get('access_token')
         
 
+    # fetch soil property data
     soil_property = get_soil_property(lattitude, longitude, depth, access_token)
     nitrogen_value = soil_property['property']['nitrogen_total'][0]['value']['value']
     phosphorous_value = soil_property['property']['phosphorous_extractable'][0]['value']['value']
@@ -110,6 +129,7 @@ def run_client():
     pH_value = soil_property['property']['ph'][0]['value']['value']
 
 
+    # classify soil properties based on classifications in Table 1
     nitrogen_classification = get_nitrogen_classification(nitrogen_value)
     phosphorous_classification = get_phosphorous_classification(phosphorous_value)
     potassium_classification = get_potassium_classification(potassium_value)
@@ -130,7 +150,7 @@ def run_client():
     soil_classification['potassium'] = potassium_classification
     soil_classification['pH'] = pH_classification
 
-   
+    # get fertilizer recommendation from LLM and print to stdout
     recommendation = get_fertilizer_recommendation(groq_api_url, groq_api_key, soil_classification)
     print(recommendation['choices'][0]['message']['content'])
     

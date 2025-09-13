@@ -1,6 +1,6 @@
 """
 Helper function to get soil the property
-of a given location and depth
+of a given location and depth from the iSDAsoil API
 """
 
 import os
@@ -31,6 +31,7 @@ def get_soil_property(lattitude, longitude, depth, access_token):
         'Authorization': f'Bearer {access_token}'
     }
     
+    # catch ReadTimeout or generic request errors to avoid crashes
     try:
         response = requests.get(url, params=params, headers=headers, timeout=5)
     except requests.exceptions.ReadTimeout:
@@ -41,6 +42,8 @@ def get_soil_property(lattitude, longitude, depth, access_token):
         exit(1)
 
 
+    # check status code for invalid credentials
+    # on success, return soil property data as JSON response
     if response.status_code != 200:
         print('\nPlease choose another location. No soil data for deserts and waterbodies')
         exit(1)

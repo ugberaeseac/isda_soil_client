@@ -1,10 +1,13 @@
 """
-
+Helper function that builds a soil classification prompt
+and call GroqCloud's LLM endpoint to get a basic fertilizer
+recommendation for farmers in Africa.
 """
 
 import requests
 
 
+# prompt template for 'system' role
 prompt_system= """
 You are an agronomist specialist and assistant. Use ONLY these fertilizer options and their nutrient coverage:
 - Urea (46-0-0) -> supplies N (high)
@@ -18,6 +21,7 @@ You are an agronomist specialist and assistant. Use ONLY these fertilizer option
 Give clear and simple recommendations for farmers in Africa.
 """
 
+# prompt template for 'user' role
 prompt = """
 The soil classification results are:
 - Nitrogen: {}
@@ -31,8 +35,11 @@ Provide a basic fertilizer recommendation for this soil, based only on the allow
 
 def get_fertilizer_recommendation(groq_api_url, groq_api_key, soil_classification):
     """
-
+    Build and send request to GroqCloud LLM based on the
+    provided soil classifications to get fertilizer recommendation
     """
+
+    # extract the soil properties and parse it with prompt to LLM
     nitrogen = soil_classification.get('nitrogen')
     phosphorous = soil_classification.get('phosphorous')
     potassium = soil_classification.get('potassium')
@@ -59,6 +66,8 @@ def get_fertilizer_recommendation(groq_api_url, groq_api_key, soil_classificatio
         ],
     }
 
+
+    # catch ReadTimeout or generic request errors to avoid crashes
     try:
         response = requests.post(groq_api_url, headers=headers, json=payload, timeout=5)
     except requests.exceptions.ReadTimeout:
@@ -69,6 +78,8 @@ def get_fertilizer_recommendation(groq_api_url, groq_api_key, soil_classificatio
         exit(1)
 
 
+    # check status code for invalid credentials
+    # on success, return JSON response
     if response.status_code == 200:
         return response.json()
     else:
