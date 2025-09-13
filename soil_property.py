@@ -32,5 +32,8 @@ def get_soil_property(lattitude, longitude, depth, access_token):
     }
     
     response = requests.get(url, params=params, headers=headers, timeout=5)
+    if response.status_code != 200:
+        print('\nPlease choose another location. No soil data for deserts and waterbodies')
+        exit(1)
     soil_property_data = response.json()
     return soil_property_data
