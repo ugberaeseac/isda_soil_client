@@ -59,6 +59,18 @@ def get_fertilizer_recommendation(groq_api_url, groq_api_key, soil_classificatio
         ],
     }
 
-    response = requests.post(groq_api_url, headers=headers, json=payload, timeout=5)
+    try:
+        response = requests.post(groq_api_url, headers=headers, json=payload, timeout=5)
+    except requests.exceptions.ReadTimeout:
+        print('\nRequest Timeout, Please try again')
+        exit(1)
+    except requests.exceptions.RequestException:
+        print('\nRequest Failed. Please try again')
+        exit(1)
+
+
     if response.status_code == 200:
         return response.json()
+    else:
+        print('\nUnknown LLM request URL: Please check the URL for typos')
+        exit(1)

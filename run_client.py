@@ -86,7 +86,15 @@ def run_client():
 
     url = f'{base_url}/login'
     payload = {'username': isda_email, 'password': isda_password}
-    response = requests.post(url, data=payload, timeout=5)
+    
+    try:
+        response = requests.post(url, data=payload, timeout=5)
+    except requests.exceptions.ReadTimeout:
+        print('\nRequest Timeout, Please try again')
+        exit(1)
+    except requests.exceptions.RequestException:
+        print('\nRequest Failed. Please try again')
+        exit(1)
 
     if response.status_code != 200:
         print('Incorrect username or password, please try again')

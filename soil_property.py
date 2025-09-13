@@ -31,7 +31,16 @@ def get_soil_property(lattitude, longitude, depth, access_token):
         'Authorization': f'Bearer {access_token}'
     }
     
-    response = requests.get(url, params=params, headers=headers, timeout=5)
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=5)
+    except requests.exceptions.ReadTimeout:
+        print('\nRequest Timeout, Please try again')
+        exit(1)
+    except requests.exceptions.RequestException:
+        print('\nRequest Failed. Please try again')
+        exit(1)
+
+
     if response.status_code != 200:
         print('\nPlease choose another location. No soil data for deserts and waterbodies')
         exit(1)
