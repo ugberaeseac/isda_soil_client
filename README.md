@@ -24,7 +24,7 @@ The script:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/isda-soil-client.git
+   git clone https://github.com/ugberaeseac/isda-soil-client.git
    cd isda-soil-client
    ```
 
